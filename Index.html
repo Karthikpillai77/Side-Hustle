@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listing Writer</title>
+<style>
+  :root { --bg:#f3f7f4; --ink:#1d2b24; --muted:#5d6f66; --card:#fff; --accent:#2f6f4f; --line:#d5e0d9; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.55 Georgia, "Times New Roman", serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  p.sub { margin: 0 0 24px; color: var(--muted); }
+  form { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  label { display:block; font: 600 .9rem system-ui, sans-serif; margin: 14px 0 6px; }
+  label:first-child { margin-top: 0; }
+  input, select, textarea { width:100%; padding:10px 12px; font: 1rem system-ui, sans-serif; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid #8cc5a7; outline-offset: 1px; }
+  button { margin-top: 18px; padding: 11px 20px; font: 600 1rem system-ui, sans-serif; color:#fff; background:var(--accent); border:0; border-radius:6px; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  #out { margin-top: 24px; white-space: pre-wrap; background: var(--card); border:1px solid var(--line); border-radius:10px; padding: 20px; }
+  #out:empty { display:none; }
+  .err { color:#a12b2b; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Listing Writer</h1>
+  <p class="sub">Type a few facts about your product and get a ready-to-post listing. Everything runs on your own computer, so your products and prices stay private.</p>
+  <form id="f">
+    <label for="product">Product name</label>
+    <input id="product" required placeholder="e.g. Handmade coconut shell lamp">
+    <label for="details">Key details (materials, size, colour, what makes it special)</label>
+    <textarea id="details" rows="3" required placeholder="e.g. hand carved, warm LED bulb included, 20 cm tall, made in Kerala"></textarea>
+    <label for="price">Price</label>
+    <input id="price" required placeholder="e.g. Rs 650">
+    <label for="platform">Where will you post it?</label>
+    <select id="platform">
+      <option>Etsy</option><option>eBay</option><option>Instagram</option><option>WhatsApp Business</option>
+    </select>
+    <label for="tone">Tone</label>
+    <select id="tone">
+      <option>friendly</option><option>professional</option><option>fun</option>
+    </select>
+    <button id="go">Write my listing</button>
+  </form>
+  <div id="out" aria-live="polite"></div>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  $("f").addEventListener("submit", async e => {
+    e.preventDefault();
+    $("go").disabled = true; $("go").textContent = "Writing...";
+    $("out").className = ""; $("out").textContent = "";
+    try {
+      const r = await fetch("/", { method: "POST", body: JSON.stringify({
+        product: $("product").value, details: $("details").value, price: $("price").value,
+        platform: $("platform").value, tone: $("tone").value }) });
+      const d = await r.json();
+      if (d.error) { $("out").className = "err"; $("out").textContent = d.error; }
+      else $("out").textContent = d.listing;
+    } catch (err) { $("out").className = "err"; $("out").textContent = "Something went wrong: " + err; }
+    $("go").disabled = false; $("go").textContent = "Write my listing";
+  });
+</script>
+</body>
+</html>
